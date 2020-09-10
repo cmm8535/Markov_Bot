@@ -7,10 +7,10 @@ client = discord.Client()
 markov = Markov(10)
 
 
-def generate_cmd(argv: [str]) -> str:
+def generate_cmd(argv):
     if 2000 < int(argv[0]):
         return "Error: Can't generate Discord messages longer than 2000 characters"
-    rtn: str = markov.generate(int(argv[0]))
+    rtn = markov.generate(int(argv[0]))
     return rtn
 
 
@@ -19,8 +19,8 @@ functions = {
 }
 
 
-def msg_parser(msg: [str]) -> str:
-    cmd: [str] = msg.split()
+def msg_parser(msg):
+    cmd = msg.split()
     if 1 < len(cmd):
         return functions.get(cmd[1])(cmd[2:])
     else:
@@ -38,7 +38,7 @@ async def on_message(message):
         if client.user in message.mentions:
             await message.channel.send(msg_parser(message.content))
         else:
-            msgs: [str] = message.content.split("\n")
+            msgs = message.content.split("\n")
             for m in msgs:
                 markov.parse(m)
 
