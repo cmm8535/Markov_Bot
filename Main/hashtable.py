@@ -20,20 +20,20 @@ from dataclasses import dataclass
 @dataclass
 class Hashtable:
     # The array of (key, val) pairs
-    table: [[str, object]]
+    table = None  # [[str, object]]
     # The current capacity of the hashtable (the length of "table")
-    capacity: int
+    capacity = 0
     # The number of (key, val) pairs currently in "table"
-    size: int = 0
+    size = 0
 
     """
     Creates a new (empty) Hashtable with the given starting capacity
     
     @param self: self
-    @param capacity: The starting capacity of the new Hashtable
+    @param int capacity: The starting capacity of the new Hashtable
     """
 
-    def __init__(self, capacity: int):
+    def __init__(self, capacity):
         self.table = [None] * capacity
         self.capacity = capacity
 
@@ -45,11 +45,11 @@ class Hashtable:
     NOTE: Not "idiot proof"... Don't try plugging in a factor below 2
     
     @param self: self
-    @param factor: The factor in which to increase the capacity of this Hashtable (new_capacity=old_capacity*factor)
+    @param int factor: The factor in which to increase the capacity of this Hashtable (new_capacity=old_capacity*factor)
     """
 
-    def rehash(self, factor: int = 2):
-        nt: [[str, object]] = [None] * self.capacity * factor
+    def rehash(self, factor=2):
+        nt = [None] * self.capacity * factor  # [[str, object]]
         for p in self.table:
             if p is not None:
                 for i in range(self.capacity):
@@ -70,11 +70,11 @@ class Hashtable:
     itself), it will not store the given (key, val) pair.
     
     @param self: self
-    @param s: The given key to store with the (key, val) pair
-    @param e: The given value to store with the (key, val) pair
+    @param str s: The given key to store with the (key, val) pair
+    @param object e: The given value to store with the (key, val) pair
     """
 
-    def set(self, s: str, e: object):
+    def set(self, s, e):
         if e is None:
             print("Error: Can't store None Type")
             return
@@ -101,11 +101,11 @@ class Hashtable:
     table in order to say that a key isn't in it.
     
     @param self: self
-    @param s: The key to search for in the Hashtable
+    @param str s: The key to search for in the Hashtable
     @return: The value stored with the given key in the Hashtable or None
     """
 
-    def get(self, s: str) -> object:
+    def get(self, s):
         for i in range(self.capacity):
             t0 = (hash(s) + i) % self.capacity
             if self.table[t0] is not None:
@@ -119,7 +119,7 @@ This is just for testing out the Hashtable
 """
 
 if __name__ == "__main__":
-    f: Hashtable = Hashtable(1)
+    f = Hashtable(1)
     print(f)
     f.set("at", Hashtable(5))
     f.get("at").set("z", 1)

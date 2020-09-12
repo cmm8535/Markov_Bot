@@ -9,6 +9,7 @@ Authors:
 
 import random
 from dataclasses import dataclass
+from pickle import Pickler
 
 
 @dataclass
@@ -20,6 +21,10 @@ class Markov:
     starter_state = [0, {}]  # [int, Dictionary]
     # The order of the Markov model
     k = 0  # int
+    # Model's name
+    n = ""
+    # Number of times the model has been saved
+    v = 0
 
     """
     Initializes a new Markov model of order k with no data in it.
@@ -28,22 +33,11 @@ class Markov:
     @param int k: Order of the Markov model
     """
 
-    def __init__(self, k):
+    def __init__(self, n, k):
         self.k = k
+        self.n = n
         self.sequence_state = {}
         self.starter_state = [0, {}]
-
-    """
-    Initializes a new Markov model based on a saved state.
-    
-    TODO: The whole function
-    
-    @param self: self
-    @param str path: A string that has the file path to the saved state
-    """
-
-    # def __init__(self, path):
-    #    return
 
     """
     Gathers the number of occurrences for various things in a given string and adds these occurrences to the data.
@@ -78,14 +72,14 @@ class Markov:
     """
     Calls parse() and passes it the text in the given file.
     
-    TODO: The whole function
-    
     @param self: self
     @param str path: A string that has the file path to a text file to parse
     """
 
-    # def parse_file(self, path):
-    #    return
+    def parse_file(self, path):
+        with open(path, "r") as f:
+            for l in f:
+                self.parse(l)
 
     """
     Helper function to get a starting sequence of letters based off off the probability of it occurring.
@@ -147,16 +141,15 @@ class Markov:
         return rtn
 
     """
-    Will save the current state of the Markov model in a file so that the data is persistent.
-    
-    TODO: The whole function
+    Will save the current state of the Markov model in a file with the name in the format of "nv".
     
     @param self: self
-    @param str path: A string that has the file path to where the state should be saved
     """
 
-    # def save(self, path):
-    #    return
+    def save(self):
+        with open(self.n+str(self.v), "wb") as f:
+            Pickler(f).dump(self)
+            self.v += 1
 
 
 if __name__ == "__main__":
