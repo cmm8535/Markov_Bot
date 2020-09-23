@@ -13,11 +13,11 @@ def is_model(argv):
 
 def new_markov(argv):
     global markov
-    if len(argv) != 2:
+    if len(argv) != 3:
         return "Error: Invalid number of arguments"
     try:
         if markov is None:
-            markov = Markov(argv[0], int(argv[1]))
+            markov = Markov(argv[0], argv[1], int(argv[2]))
             return "Success: Model created"
     except:
         pass
@@ -49,11 +49,14 @@ def close_markov(argv):
 def generate_cmd(argv):
     if len(argv) != 1:
         return "Error: Invalid number of arguments"
-    if 2000 < int(argv[0]):
-        return "Error: Can't generate Discord messages longer than 2000 characters"
     if markov is None:
         return "Error: No model is open"
-    return "".join(markov.generate(int(argv[0])))
+    if markov.t == "letters":
+        return ("".join(markov.generate(int(argv[0]))))[:2000]
+    elif markov.t == "words":
+        return (" ".join(markov.generate(int(argv[0]))))[:2000]
+    else:
+        return "Error: Can't display output sequence (can't display this kind with text)"
 
 
 def save_cmd(argv):
@@ -65,6 +68,21 @@ def save_cmd(argv):
     except:
         return "Error: Can't save model "
 
+def file_cmd(argv):
+    if len(argv) == 1:
+        try:
+            markov.parse_file(argv[0])
+            return "Success: Parsed file"
+        except:
+            return "Error: Can't parse file"
+    elif len(argv) == 2:
+        try:
+            markov.parse_n_file(argv[0], int(argv[1]))
+            return "Success: Parsed file"
+        except:
+            return "Error: Can't parse file"
+    return "Error: Invalid number of arguments"
+
 
 functions = {
     "is_model": is_model,
@@ -72,7 +90,8 @@ functions = {
     "open": open_markov,
     "close": close_markov,
     "generate": generate_cmd,
-    "save": save_cmd
+    "save": save_cmd,
+    "file": file_cmd
 }
 
 
@@ -95,9 +114,16 @@ async def on_message(message):
         if client.user in message.mentions:
             await message.channel.send(msg_parser(message.content))
         elif markov is not None:
-            msgs = message.content.split("\n")
-            for m in msgs:
-                markov.parse(m)
+            formated_msg = message.content.strip()
+            if formated_msg[-1] != "." and formated_msg[-1] != "!" and formated_msg[-1] != "?":
+                formated_msg += ". "
+            else:
+                formated_msg += " "
+            if markov.t == "letters":
+                markov.parse(formated_msg)
+            elif markov.t == "words":
+                markov.parse(tuple(formated_msg.split(" ")))
+
 
 
 if __name__ == "__main__":

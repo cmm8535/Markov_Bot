@@ -23,6 +23,8 @@ class Markov:
     k = 0  # int
     # Model's name
     n = ""
+    # Model's data's type (this is a str)
+    t = ""
     # Number of times the model has been saved
     v = 0
 
@@ -33,9 +35,10 @@ class Markov:
     @param int k: Order of the Markov model
     """
 
-    def __init__(self, n, k):
+    def __init__(self, n, t, k):
         self.k = k
         self.n = n
+        self.t = t
         self.sequence_state = {}
         self.starter_state = [0, {}]
 
@@ -70,6 +73,12 @@ class Markov:
             self.sequence_state[t0[:-1]][0] += 1
 
     """
+    NOTE: Both parse_file functions could crash the program... Try to think of a more elegant way than shoving
+    a whole book worth of text into a single string... I am not splitting it by line because it destroys the grammatical
+    structure (although I might change that later).
+    """
+
+    """
     Calls parse() and passes it the text in the given file.
     
     @param self: self
@@ -78,8 +87,26 @@ class Markov:
 
     def parse_file(self, path):
         with open(path, "r") as f:
-            for l in f:
-                self.parse(l)
+            if self.t == "letters":
+                self.parse(f.read())
+            elif self.t == "words":
+                self.parse(tuple(f.read().split(" ")))
+
+    """
+    Calls parse() and passes it the text in the given file with at most n characters
+
+    @param self: self
+    @param str path: A string that has the file path to a text file to parse
+    @param int n: Maximum number of characters to read
+    """
+
+    def parse_n_file(self, path, n):
+        with open(path, "r") as f:
+            if self.t == "letters":
+                self.parse(f.read(n))
+            elif self.t == "words":
+                self.parse(tuple(f.read(n).split(" ")))
+
 
     """
     Helper function to get a starting sequence of symbols based off the probability of it occurring.
