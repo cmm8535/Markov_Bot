@@ -7,6 +7,10 @@ client = discord.Client()
 markov = None
 
 
+def is_model(argv):
+    return markov is not None
+
+
 def new_markov(argv):
     global markov
     if len(argv) != 2:
@@ -16,7 +20,8 @@ def new_markov(argv):
             markov = Markov(argv[0], int(argv[1]))
             return "Success: Model created"
     except:
-        return "Error: Can't make model"
+        pass
+    return "Error: Can't make model"
 
 
 def open_markov(argv):
@@ -63,6 +68,7 @@ def save_cmd(argv):
 
 
 functions = {
+    "is_model": is_model,
     "new": new_markov,
     "open": open_markov,
     "close": close_markov,

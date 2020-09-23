@@ -50,17 +50,17 @@ class Markov:
     """
 
     def parse(self, s):
-        if len(s) < self.k + 1:
+        if len(s) < self.k + 2:
             return
-        t0 = s[:self.k]
+        t0 = s[:self.k+1]
         if t0 not in self.starter_state[1]:
             self.starter_state[1][t0] = 1
         else:
             self.starter_state[1][t0] = self.starter_state[1][t0] + 1
         self.starter_state[0] += 1
 
-        for i in range(len(s) - self.k):
-            t0 = s[i:i + self.k + 1]
+        for i in range(len(s) - (self.k+1)):
+            t0 = s[i:i + self.k + 2]
             if t0[:-1] not in self.sequence_state:
                 self.sequence_state[t0[:-1]] = [0, {}]
             if t0[-1] not in self.sequence_state[t0[:-1]][1]:
@@ -111,7 +111,7 @@ class Markov:
     """
 
     def generate(self, l):
-        if l < self.k:
+        if l < self.k + 1:
             return "Error: Length of the output is too short"
 
         rtn = self.new_starter()
@@ -120,13 +120,13 @@ class Markov:
         # t0: [int, Dictionary]
         t2 = len(rtn)
         while len(rtn) < l:
-            if rtn[-self.k:] in self.sequence_state:
-                t0 = self.sequence_state[rtn[-self.k:]]
+            if rtn[-(self.k+1):] in self.sequence_state:
+                t0 = self.sequence_state[rtn[-(self.k+1):]]
             else:
                 rtn += ("\n" + self.new_starter())
                 if len(rtn) >= l:
                     return rtn[:l]
-                t0 = self.sequence_state[rtn[-self.k:]]
+                t0 = self.sequence_state[rtn[-(self.k+1):]]
             r = random.random()
             for i in t0[1].items():
                 t1 = i[1] / t0[0]
