@@ -14,9 +14,9 @@ from pickle import Pickler
 
 @dataclass
 class Markov:
-    # The Dictionary that stores probabilities of a character following a sequence of characters
+    # The Dictionary that stores probabilities of a symbol following a sequence of symbols
     sequence_state = {}
-    # The (int, Dictionary) pair that stores probabilities of a sequence of characters starting a message (it
+    # The (int, Dictionary) pair that stores probabilities of a sequence of symbols starting a sequence (it
     # is a list because tuples are immutable)
     starter_state = [0, {}]  # [int, Dictionary]
     # The order of the Markov model
@@ -40,33 +40,33 @@ class Markov:
         self.starter_state = [0, {}]
 
     """
-    Gathers the number of occurrences for various things in a given string and adds these occurrences to the data.
+    Gathers the number of occurrences for various things in a given sequence and adds these occurrences to the data.
     
     TODO: Maybe clean up the code a bit. Otherwise think of better ways to store the probabilities rather than a 
     Dictionary.
     
     @param self: self
-    @param str s: A string
+    @param (Object) o: A n-tuple of objects (which includes strings)
     """
 
-    def parse(self, s):
-        if len(s) < self.k + 2:
+    def parse(self, o):
+        if len(o) < self.k + 2:
             return
-        t0 = s[:self.k+1]
+        t0 = tuple(o[:self.k + 1])
         if t0 not in self.starter_state[1]:
             self.starter_state[1][t0] = 1
         else:
             self.starter_state[1][t0] = self.starter_state[1][t0] + 1
         self.starter_state[0] += 1
 
-        for i in range(len(s) - (self.k+1)):
-            t0 = s[i:i + self.k + 2]
+        for i in range(len(o) - (self.k + 1)):
+            t0 = tuple(o[i:i + self.k + 2])
             if t0[:-1] not in self.sequence_state:
                 self.sequence_state[t0[:-1]] = [0, {}]
-            if t0[-1] not in self.sequence_state[t0[:-1]][1]:
-                self.sequence_state[t0[:-1]][1][t0[-1]] = 1
+            if (t0[-1],) not in self.sequence_state[t0[:-1]][1]:
+                self.sequence_state[t0[:-1]][1][(t0[-1],)] = 1
             else:
-                self.sequence_state[t0[:-1]][1][t0[-1]] = self.sequence_state[t0[:-1]][1][t0[-1]] + 1
+                self.sequence_state[t0[:-1]][1][(t0[-1],)] = self.sequence_state[t0[:-1]][1][(t0[-1],)] + 1
             self.sequence_state[t0[:-1]][0] += 1
 
     """
@@ -82,18 +82,15 @@ class Markov:
                 self.parse(l)
 
     """
-    Helper function to get a starting sequence of letters based off off the probability of it occurring.
+    Helper function to get a starting sequence of symbols based off the probability of it occurring.
     Will return None if the model "doesn't" know a starting sequence (which means it has no data).
     
-    TODO: Make it so that it returns a sequence that starts a sentence (which would be a forced English standard
-    but for now I can't think of a better way).
-    
     @param self: self
-    @return: A sequence of letters that starts has started a message or None
+    @return: A sequence of symbols that starts has started a sequence or None
     """
 
     def new_starter(self):
-        r = random.random()
+        r = 1 - random.random()
         for i in self.starter_state[1].items():
             t0 = i[1] / self.starter_state[0]
             if r < t0:
@@ -102,43 +99,47 @@ class Markov:
                 r -= t0
 
     """
-    Will generate and return text with the given length based on the model's current data. If it can't generate
-    text (no data or a potential bug) it will return an error message.
+    Will generate and return a sequence with the given length based on the model's current data. If it can't generate
+    a sequence (no data or a potential bug) it will return an error message.
     
     @param self: self
     @param int l: The desired length of the generated text
-    @return: The generated text or an error message
+    @return: The generated sequence or an error message
     """
 
     def generate(self, l):
         if l < self.k + 1:
             return "Error: Length of the output is too short"
 
-        rtn = self.new_starter()
-        if rtn is None:
+        rtn = []
+        key = self.new_starter()  # (Tuple)
+        if key is None:
             return "Error: No Data"
         # t0: [int, Dictionary]
         t2 = len(rtn)
-        while len(rtn) < l:
-            if rtn[-(self.k+1):] in self.sequence_state:
-                t0 = self.sequence_state[rtn[-(self.k+1):]]
+        while len(rtn) + len(key) < l:
+            if key in self.sequence_state:
+                t0 = self.sequence_state[key]
             else:
-                rtn += ("\n" + self.new_starter())
-                if len(rtn) >= l:
+                rtn += list(key)
+                key = self.new_starter()
+                if len(rtn) + len(key) >= l:
+                    rtn += list(key)
                     return rtn[:l]
-                t0 = self.sequence_state[rtn[-(self.k+1):]]
-            r = random.random()
+                t0 = self.sequence_state[key]
+            r = 1 - random.random()
             for i in t0[1].items():
                 t1 = i[1] / t0[0]
                 if r < t1:
-                    rtn += i[0]
+                    rtn.append(key[0])
+                    key = tuple(list(key[1:]) + list(i[0]))
                     break
                 else:
                     r -= t1
             if len(rtn) == t2:
                 return "Error: Unique substring given (might be a RANDOM glitch)"
             t2 = len(rtn)
-        return rtn
+        return tuple(rtn)
 
     """
     Will save the current state of the Markov model in a file with the name in the format of "nv".
@@ -147,18 +148,26 @@ class Markov:
     """
 
     def save(self):
-        with open(self.n+str(self.v), "wb") as f:
+        with open(self.n + str(self.v), "wb") as f:
             Pickler(f).dump(self)
             self.v += 1
 
 
+"""(project) Translate the following pseudo-code into working code. The function should be named minChange.
+    (The first argument is the amount of money and the second argument is a list of denominations. It returns
+    the minimum number of coins required.) You will also need to write code for ⊕ and min. The ⊕ operation
+    is understood here as an extension of regular addition so that it also works on Failure; Failure plus anything
+    is Failure. The function min is also extended to work with Failure; numbers are understood as smaller than
+    Failure."""
+
 if __name__ == "__main__":
-    m = Markov(10)
+    m = Markov("test", 1)
     # The text below is from my Analysis of Algorithms homework
-    m.parse("""(project) Translate the following pseudo-code into working code. The function should be named minChange.
-(The first argument is the amount of money and the second argument is a list of denominations. It returns
-the minimum number of coins required.) You will also need to write code for ⊕ and min. The ⊕ operation
-is understood here as an extension of regular addition so that it also works on Failure; Failure plus anything
-is Failure. The function min is also extended to work with Failure; numbers are understood as smaller than
-Failure.""")
-    print(m.generate(1000))
+    nt = tuple("Cats are great aren't they?".split(" "))
+    m.parse(nt)
+    print(" ".join(m.generate(25)))
+    print()
+    m2 = Markov("test", 1)
+    s = "Cats are great aren't they?"
+    m2.parse(s)
+    print("".join(m2.generate(25)))

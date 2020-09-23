@@ -53,8 +53,7 @@ def generate_cmd(argv):
         return "Error: Can't generate Discord messages longer than 2000 characters"
     if markov is None:
         return "Error: No model is open"
-    rtn = markov.generate(int(argv[0]))
-    return rtn
+    return "".join(markov.generate(int(argv[0])))
 
 
 def save_cmd(argv):
